@@ -32,6 +32,11 @@ spec:
             configMapKeyRef:
               name: bedrock-roles-config
               key: BEDROCK_VECTORSTORE_ROLE_ARN
+        - name: BEDROCK_CREATE_KB_ROLE_ARN
+          valueFrom:
+            configMapKeyRef:
+              name: bedrock-roles-config
+              key: BEDROCK_CREATE_KB_ROLE_ARN
         command: ["/bin/sh","-c"]
         args:
         - |
@@ -85,12 +90,12 @@ spec:
             --policy "[{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"]},{\"ResourceType\":\"dashboard\",\"Resource\":[\"collection/parasol-collection-*\"]}],\"AllowFromPublic\":true}]" \
             --region "$AWS_REGION" || true
 
-          # 9. create data access policy - include both Bedrock role and current job role
+          # 9. create data access policy - include both Bedrock role and create-kb role from ConfigMap
           echo "Creating data access policy..."
           aws opensearchserverless create-access-policy \
             --name "parasol-data-policy" \
             --type data \
-            --policy "[{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"],\"Permission\":[\"aoss:*\"]},{\"ResourceType\":\"index\",\"Resource\":[\"index/parasol-collection-*/*\"],\"Permission\":[\"aoss:*\"]}],\"Principal\":[\"arn:aws:iam::${AWS_ACCOUNT_ID}:role/parasol-bedrock-vectorstore\",\"arn:aws:iam::${AWS_ACCOUNT_ID}:role/parasol-bedrock-kb-creator\"]}]" \
+            --policy "[{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"],\"Permission\":[\"aoss:*\"]},{\"ResourceType\":\"index\",\"Resource\":[\"index/parasol-collection-*/*\"],\"Permission\":[\"aoss:*\"]}],\"Principal\":[\"${BEDROCK_VECTORSTORE_ROLE_ARN}\",\"${BEDROCK_CREATE_KB_ROLE_ARN}\"]}]" \
             --region "$AWS_REGION" || true
 
           # 10. create OpenSearch Serverless collection
