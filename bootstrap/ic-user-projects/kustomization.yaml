@@ -12,3 +12,4 @@ resources:
 - project-manager.yaml
 # wave 1
 - create-projects-and-resources-job.yaml
+- create-bedrock-kb-job.yaml
