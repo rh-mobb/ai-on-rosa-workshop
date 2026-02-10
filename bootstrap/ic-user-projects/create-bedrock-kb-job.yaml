@@ -1,0 +1,191 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: parasol-bedrock-setup
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: bedrock-kb-creator
+      restartPolicy: Never
+      containers:
+      - name: setup
+        image: amazon/aws-cli:2.32.6
+        volumeMounts:
+        - name: workdir
+          mountPath: /.aws
+        env:
+        - name: COLLECTION_NAME
+          value: "parasol-collection"
+        - name: VECTOR_INDEX_NAME
+          value: "parasol-index"
+        - name: SOURCE_BUCKET_BASE
+          value: "parasol-source"
+        - name: KB_NAME
+          value: "cal-drivers-handbook-kb"
+        - name: PDF_GIT_URL
+          value: "https://raw.githubusercontent.com/phbergsmann/ai-on-rosa-workshop/main/bootstrap/AWS%20IaC/cal-driver.pdf"
+        - name: PDF_KEY
+          value: "cal-driver.pdf"
+        - name: BEDROCK_VECTORSTORE_ROLE_ARN
+          valueFrom:
+            configMapKeyRef:
+              name: bedrock-roles-config
+              key: BEDROCK_VECTORSTORE_ROLE_ARN
+        command: ["/bin/sh","-c"]
+        args:
+        - |
+          set -e
+
+          # 1. get AWS account ID via IRSA + sts
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Detected AWS account ID: $AWS_ACCOUNT_ID"
+
+          # 2. derive unique suffix for collection name
+          SUFFIX=$(head /dev/urandom | tr -dc 'a-z0-9' | head -c 6)
+          COLLECTION="${COLLECTION_NAME}-${SUFFIX}"
+          SOURCE_BUCKET="${SOURCE_BUCKET_BASE}-${SUFFIX}"
+          echo "Using COLLECTION=${COLLECTION}"
+          echo "Using SOURCE_BUCKET=${SOURCE_BUCKET}"
+
+          # 3. create S3 source bucket
+          aws s3api create-bucket \
+            --bucket "$SOURCE_BUCKET" \
+            --region "$AWS_REGION" \
+            --create-bucket-configuration LocationConstraint="$AWS_REGION" \
+            || true
+
+          # 4. download PDF from GitHub
+          curl -fSL "$PDF_GIT_URL" -o /tmp/document.pdf
+
+          # 5. upload PDF to source bucket
+          aws s3 cp /tmp/document.pdf s3://"$SOURCE_BUCKET"/"$PDF_KEY" --region "$AWS_REGION"
+
+          # 6. build role ARN for Bedrock KB ingestion
+          ROLE_ARN="${BEDROCK_VECTORSTORE_ROLE_ARN}"
+          echo "Using ROLE_ARN=${ROLE_ARN}"
+
+          # Get the current role ARN (for the job itself)
+          CURRENT_ROLE_ARN=$(aws sts get-caller-identity --query Arn --output text | sed 's/:sts:/:iam:/' | sed 's/:assumed-role\//:role\//' | sed 's/\/botocore-session-[0-9]*//')
+          echo "Current role ARN: $CURRENT_ROLE_ARN"
+
+          # 7. create encryption security policy
+          echo "Creating encryption security policy..."
+          aws opensearchserverless create-security-policy \
+            --name "parasol-encryption-policy" \
+            --type encryption \
+            --policy "{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"]}],\"AWSOwnedKey\":true}" \
+            --region "$AWS_REGION" || true
+
+          # 8. create network security policy
+          echo "Creating network security policy..."
+          aws opensearchserverless create-security-policy \
+            --name "parasol-network-policy" \
+            --type network \
+            --policy "[{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"]},{\"ResourceType\":\"dashboard\",\"Resource\":[\"collection/parasol-collection-*\"]}],\"AllowFromPublic\":true}]" \
+            --region "$AWS_REGION" || true
+
+          # 9. create data access policy - include both Bedrock role and current job role
+          echo "Creating data access policy..."
+          aws opensearchserverless create-access-policy \
+            --name "parasol-data-policy" \
+            --type data \
+            --policy "[{\"Rules\":[{\"ResourceType\":\"collection\",\"Resource\":[\"collection/parasol-collection-*\"],\"Permission\":[\"aoss:*\"]},{\"ResourceType\":\"index\",\"Resource\":[\"index/parasol-collection-*/*\"],\"Permission\":[\"aoss:*\"]}],\"Principal\":[\"arn:aws:iam::${AWS_ACCOUNT_ID}:role/parasol-bedrock-vectorstore\",\"arn:aws:iam::${AWS_ACCOUNT_ID}:role/parasol-bedrock-kb-creator\"]}]" \
+            --region "$AWS_REGION" || true
+
+          # 10. create OpenSearch Serverless collection
+          COLLECTION_ARN=$(aws opensearchserverless create-collection \
+            --name "$COLLECTION" \
+            --type VECTORSEARCH \
+            --region "$AWS_REGION" \
+            --query "createCollectionDetail.arn" --output text)
+
+          echo "Created OpenSearch Serverless collection: $COLLECTION_ARN"
+
+          # Wait for collection to become active
+          echo "Waiting for collection to become active..."
+          while true; do
+            STATUS=$(aws opensearchserverless batch-get-collection \
+              --names "$COLLECTION" \
+              --region "$AWS_REGION" \
+              --query "collectionDetails[0].status" --output text)
+            if [ "$STATUS" = "ACTIVE" ]; then
+              break
+            fi
+            echo "Collection status: $STATUS. Waiting..."
+            sleep 10
+          done
+
+          # Get collection endpoint
+          COLLECTION_ENDPOINT=$(aws opensearchserverless batch-get-collection \
+            --names "$COLLECTION" \
+            --region "$AWS_REGION" \
+            --query "collectionDetails[0].collectionEndpoint" --output text)
+          echo "Collection endpoint: $COLLECTION_ENDPOINT"
+
+          COLLECTION_ID=$(aws opensearchserverless batch-get-collection \
+            --names "$COLLECTION" \
+            --region "$AWS_REGION" \
+            --query "collectionDetails[0].id" --output text)
+          echo "Collection ID: $COLLECTION_ID"
+
+          aws opensearchserverless create-index \
+            --id "$COLLECTION_ID" \
+            --index-name "$VECTOR_INDEX_NAME" \
+            --index-schema '{"settings":{"number_of_shards":1,"number_of_replicas":1,"knn":true},"mappings":{"properties":{"embedding":{"type":"knn_vector","dimension":1024,"method":{"engine":"faiss","name":"hnsw","space_type":"l2"}},"text":{"type":"text"},"metadata":{"type":"text","index":false}}}}' \
+            --region "$AWS_REGION" || true
+
+          while true; do
+            if aws opensearchserverless get-index \
+                --id "$COLLECTION_ID" \
+                --index-name "$VECTOR_INDEX_NAME" \
+                > /dev/null 2>&1; then
+              echo "Index exists — proceeding"
+              break
+            else
+              echo "Index not found yet — retrying in 5s"
+              sleep 5
+            fi
+          done
+
+          # 11. create knowledge base with OpenSearch Serverless storage
+          KB_ID=$(aws bedrock-agent create-knowledge-base \
+            --name "$KB_NAME" \
+            --description "California Drivers Handbook KB (parasol workshop)" \
+            --role-arn "$ROLE_ARN" \
+            --knowledge-base-configuration "{\"type\":\"VECTOR\",\"vectorKnowledgeBaseConfiguration\":{\"embeddingModelArn\":\"arn:aws:bedrock:${AWS_REGION}::foundation-model/amazon.titan-embed-text-v2:0\",\"embeddingModelConfiguration\":{\"bedrockEmbeddingModelConfiguration\":{\"dimensions\":1024,\"embeddingDataType\":\"FLOAT32\"}}}}" \
+            --storage-configuration "{\"type\":\"OPENSEARCH_SERVERLESS\",\"opensearchServerlessConfiguration\":{\"collectionArn\":\"${COLLECTION_ARN}\",\"vectorIndexName\":\"${VECTOR_INDEX_NAME}\",\"fieldMapping\":{\"vectorField\":\"embedding\",\"textField\":\"text\",\"metadataField\":\"metadata\"}}}" \
+            --region "$AWS_REGION" \
+            --query "knowledgeBase.knowledgeBaseId" --output text)
+
+          if [ -z "$KB_ID" ]; then
+            echo "ERROR: Failed to create Knowledge Base" >&2
+            exit 1
+          fi
+          echo "Created KB_ID: $KB_ID"
+
+          # 12. create data source pointing at S3 source bucket
+          DS_ID=$(aws bedrock-agent create-data-source \
+            --knowledge-base-id "$KB_ID" \
+            --name "$SOURCE_BUCKET" \
+            --data-source-configuration "{\"type\":\"S3\",\"s3Configuration\":{\"bucketArn\":\"arn:aws:s3:::${SOURCE_BUCKET}\"}}" \
+            --region "$AWS_REGION" \
+            --query "dataSource.dataSourceId" --output text)
+
+          if [ -z "$DS_ID" ]; then
+            echo "ERROR: Failed to create data source" >&2
+            exit 1
+          fi
+          echo "Created DataSource ID: $DS_ID"
+
+          # 13. trigger ingestion
+          INGEST_JOB_ID=$(aws bedrock-agent start-ingestion-job \
+            --knowledge-base-id "$KB_ID" \
+            --data-source-id "$DS_ID" \
+            --region "$AWS_REGION" \
+            --query "ingestionJob.ingestionJobId" --output text)
+
+          echo "Started ingestion job: $INGEST_JOB_ID"
+      volumes:
+      - name: workdir
+        emptyDir: {}
