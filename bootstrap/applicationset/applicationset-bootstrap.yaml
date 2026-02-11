@@ -52,6 +52,11 @@ spec:
         path: '{{path}}'
       destination:
         server: 'https://kubernetes.default.svc'
+      ignoreDifferences:
+        - group: ""
+          kind: "ServiceAccount"
+          jsonPointers:
+          - /metadata/annotations/eks\.amazonaws\.com/role-arn
       syncPolicy:
         automated:
           prune: true
