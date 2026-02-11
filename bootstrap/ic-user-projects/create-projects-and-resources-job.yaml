@@ -14,6 +14,30 @@ spec:
     spec:
       serviceAccount: project-creator
       serviceAccountName: project-creator
+      initContainers:
+        - name: wait-for-config
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+              CM_NAME="bedrock-roles-config"
+              REQUIRED_KEYS="WORKBENCH_IAM_ROLE_ARN"
+
+              echo "Waiting for ConfigMap ${CM_NAME} in namespace ${NS} ..."
+              until oc -n "${NS}" get configmap "${CM_NAME}" >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              echo "ConfigMap exists. Waiting for required keys: ${REQUIRED_KEYS}"
+              for k in ${REQUIRED_KEYS}; do
+                until oc -n "${NS}" get configmap "${CM_NAME}" -o "jsonpath={.data.${k}}" 2>/dev/null | grep -q .; do
+                  echo "  still missing key: ${k}"
+                  sleep 2
+                done
+              done
+
+              echo "All required keys present."
       containers:
       - name: create-and-apply-resources
         image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
