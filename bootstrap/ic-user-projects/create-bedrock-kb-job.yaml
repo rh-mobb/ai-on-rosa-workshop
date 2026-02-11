@@ -2,12 +2,56 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: parasol-bedrock-setup
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
 spec:
   backoffLimit: 0
   template:
     spec:
-      serviceAccountName: bedrock-kb-creator
+      serviceAccountName: project-creator
       restartPolicy: Never
+      initContainers:
+        - name: wait-for-config
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+              CM_NAME="bedrock-roles-config"
+              REQUIRED_KEYS="BEDROCK_CREATE_KB_ROLE_ARN BEDROCK_VECTORSTORE_ROLE_ARN"
+
+              echo "Waiting for ConfigMap ${CM_NAME} in namespace ${NS} ..."
+              until oc -n "${NS}" get configmap "${CM_NAME}" >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              echo "ConfigMap exists. Waiting for required keys: ${REQUIRED_KEYS}"
+              for k in ${REQUIRED_KEYS}; do
+                until oc -n "${NS}" get configmap "${CM_NAME}" -o "jsonpath={.data.${k}}" 2>/dev/null | grep -q .; do
+                  echo "  still missing key: ${k}"
+                  sleep 2
+                done
+              done
+
+              echo "All required keys present."
+
+        - name: wait-for-serviceaccount-token
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+              SA="project-creator"
+
+              echo "Waiting for serviceaccount ${SA} annotation eks.amazonaws.com/role-arn ..."
+              until oc -n "${NS}" get sa "${SA}" -o "jsonpath={.metadata.annotations.eks\.amazonaws\.com/role-arn}" 2>/dev/null | grep -q '^arn:'; do
+                sleep 2
+              done
+
+              echo "ServiceAccount is annotated."
       containers:
       - name: setup
         image: amazon/aws-cli:2.32.6
