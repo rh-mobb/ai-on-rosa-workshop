@@ -68,21 +68,6 @@ spec:
               done
 
               echo "All required keys present."
-
-        - name: wait-for-serviceaccount-token
-          image: registry.redhat.io/openshift4/ose-cli:latest
-          command: ["/bin/sh", "-ec"]
-          args:
-            - |
-              NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
-              SA="project-creator"
-
-              echo "Waiting for serviceaccount ${SA} annotation eks.amazonaws.com/role-arn ..."
-              until oc -n "${NS}" get sa "${SA}" -o "jsonpath={.metadata.annotations.eks\.amazonaws\.com/role-arn}" 2>/dev/null | grep -q '^arn:'; do
-                sleep 2
-              done
-
-              echo "ServiceAccount is annotated."
       containers:
       - name: setup
         image: amazon/aws-cli:2.32.6
