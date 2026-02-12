@@ -1,6 +1,37 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
+  name: parasol-wait-serviceaccount
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: project-creator
+      restartPolicy: Never
+      containers:
+      - name: wait-for-serviceaccount
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command: ["/bin/sh", "-ec"]
+        args:
+          - |
+            NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+            SA="project-creator"
+
+            echo "Waiting for serviceaccount ${SA} annotation eks.amazonaws.com/role-arn ..."
+            until oc -n "${NS}" get sa "${SA}" -o "jsonpath={.metadata.annotations.eks\.amazonaws\.com/role-arn}" 2>/dev/null | grep -q '^arn:'; do
+              sleep 2
+            done
+
+            echo "ServiceAccount is annotated."
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
   name: parasol-bedrock-setup
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -238,34 +269,3 @@ spec:
       volumes:
       - name: workdir
         emptyDir: {}
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: parasol-wait-serviceaccount
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
-    argocd.argoproj.io/compare-options: IgnoreExtraneous
-spec:
-  backoffLimit: 0
-  template:
-    spec:
-      serviceAccountName: project-creator
-      restartPolicy: Never
-      containers:
-      - name: wait-for-serviceaccount
-        image: registry.redhat.io/openshift4/ose-cli:latest
-        command: ["/bin/sh", "-ec"]
-        args:
-          - |
-            NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
-            SA="project-creator"
-
-            echo "Waiting for serviceaccount ${SA} annotation eks.amazonaws.com/role-arn ..."
-            until oc -n "${NS}" get sa "${SA}" -o "jsonpath={.metadata.annotations.eks\.amazonaws\.com/role-arn}" 2>/dev/null | grep -q '^arn:'; do
-              sleep 2
-            done
-
-            echo "ServiceAccount is annotated."
