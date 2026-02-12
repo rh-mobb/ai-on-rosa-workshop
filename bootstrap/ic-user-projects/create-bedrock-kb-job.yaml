@@ -84,7 +84,7 @@ spec:
         - name: KB_NAME
           value: "cal-drivers-handbook-kb"
         - name: PDF_GIT_URL
-          value: "https://raw.githubusercontent.com/phbergsmann/ai-on-rosa-workshop/main/bootstrap/AWS%20IaC/cal-driver.pdf"
+          value: "https://raw.githubusercontent.com/phbergsmann/ai-on-rosa-workshop/main/lab-materials/03/cal-driver.pdf"
         - name: PDF_KEY
           value: "cal-driver.pdf"
         - name: BEDROCK_VECTORSTORE_ROLE_ARN
