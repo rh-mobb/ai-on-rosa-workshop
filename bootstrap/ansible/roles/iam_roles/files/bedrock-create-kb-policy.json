@@ -1,0 +1,71 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "S3SourceBucketOps",
+			"Effect": "Allow",
+			"Action": [
+				"s3:CreateBucket",
+				"s3:PutObject",
+				"s3:GetObject",
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::parasol-source-*",
+				"arn:aws:s3:::parasol-source-*/*"
+			]
+		},
+		{
+			"Sid": "OpenSearchServerlessOps",
+			"Effect": "Allow",
+			"Action": [
+				"aoss:CreateCollection",
+				"aoss:DeleteCollection",
+				"aoss:BatchGetCollection",
+				"aoss:ListCollections",
+				"aoss:UpdateCollection",
+				"aoss:CreateAccessPolicy",
+				"aoss:CreateSecurityPolicy",
+				"aoss:GetAccessPolicy",
+				"aoss:GetSecurityPolicy",
+				"aoss:UpdateAccessPolicy",
+				"aoss:UpdateSecurityPolicy",
+				"aoss:CreateIndex",
+				"aoss:GetIndex",
+				"aoss:APIAccessAll",
+				"aoss:DeleteIndex"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "IAMServiceLinkedRole",
+			"Effect": "Allow",
+			"Action": [
+				"iam:CreateServiceLinkedRole"
+			],
+			"Resource": "arn:aws:iam::*:role/aws-service-role/observability.aoss.amazonaws.com/AWSServiceRoleForAmazonOpenSearchServerless",
+			"Condition": {
+				"StringLike": {
+					"iam:AWSServiceName": "observability.aoss.amazonaws.com"
+				}
+			}
+		},
+		{
+			"Sid": "BedrockKBManagement",
+			"Effect": "Allow",
+			"Action": [
+				"bedrock:CreateKnowledgeBase",
+				"bedrock:CreateDataSource",
+				"bedrock:StartIngestionJob",
+				"bedrock:ListKnowledgeBases",
+				"bedrock:ListDataSources",
+				"bedrock:GetKnowledgeBase",
+				"bedrock:DeleteKnowledgeBase",
+				"bedrock:DeleteDataSource",
+				"iam:PassRole",
+				"bedrock:GetDataSource"
+			],
+			"Resource": "*"
+		}
+	]
+}

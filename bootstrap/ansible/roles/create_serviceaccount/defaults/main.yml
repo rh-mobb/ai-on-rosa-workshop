@@ -1,0 +1,8 @@
+---
+# Defaults for create_serviceaccount role
+# These can be overridden via inventory or extra-vars
+sa_name: "project-creator"
+sa_namespace: "{{ irsa_namespace_kb | default('ic-user-projects') }}"
+iam_role_name: "bedrock-create-kb-role"
+aws_account_id: "{{ aws_account_id | default('REPLACE_AWS_ACCOUNT_ID') }}"
+kubeconfig_path: "{{ playbook_dir }}/.rosa_kubeconfig"

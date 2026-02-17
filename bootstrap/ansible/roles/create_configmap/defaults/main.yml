@@ -1,0 +1,8 @@
+---
+# Defaults for create_configmap role
+configmap_name: "bedrock-roles-config"
+configmap_namespace: "ic-user-projects"
+bedrock_create_kb_role: "bedrock-create-kb-role"
+bedrock_user_role: "bedrock-user-role"
+bedrock_vectorstore_role: "bedrock-vectorstore-role"
+kubeconfig_path: "{{ playbook_dir }}/.rosa_kubeconfig"

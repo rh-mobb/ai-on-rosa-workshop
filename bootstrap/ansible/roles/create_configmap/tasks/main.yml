@@ -1,0 +1,43 @@
+---
+# Create a ConfigMap containing role ARNs and AWS account ID in the target namespace
+
+- name: Ensure namespace exists for configmap
+  ansible.builtin.command:
+    cmd: oc get namespace --kubeconfig={{ kubeconfig_path }} {{ configmap_namespace }}
+  register: cm_ns_check
+  failed_when: false
+  changed_when: false
+
+- name: Create namespace for configmap if missing
+  ansible.builtin.command:
+    cmd: oc create namespace --kubeconfig={{ kubeconfig_path }} {{ configmap_namespace }}
+  when: cm_ns_check.rc != 0
+  register: cm_ns_create
+  failed_when: cm_ns_create.rc != 0
+
+- name: Build configmap manifest
+  ansible.builtin.copy:
+    dest: "{{ playbook_dir }}/.{{ configmap_name }}.yaml"
+    content: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: {{ configmap_name }}
+        namespace: {{ configmap_namespace }}
+      data:
+        AWS_ACCOUNT_ID: "{{ aws_account_id }}"
+        BEDROCK_CREATE_KB_ROLE_ARN: "arn:aws:iam::{{ aws_account_id }}:role/{{ bedrock_create_kb_role }}"
+        BEDROCK_USER_ROLE_ARN: "arn:aws:iam::{{ aws_account_id }}:role/{{ bedrock_user_role }}"
+        BEDROCK_VECTORSTORE_ROLE_ARN: "arn:aws:iam::{{ aws_account_id }}:role/{{ bedrock_vectorstore_role }}"
+
+- name: Apply ConfigMap manifest
+  ansible.builtin.command:
+    cmd: oc apply --kubeconfig={{ kubeconfig_path }} -f {{ playbook_dir }}/.{{ configmap_name }}.yaml
+  register: cm_apply
+  failed_when: cm_apply.rc != 0
+
+- name: Remove generated configmap manifest
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/.{{ configmap_name }}.yaml"
+    state: absent
+  when: cm_apply is defined

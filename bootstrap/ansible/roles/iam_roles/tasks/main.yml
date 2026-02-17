@@ -1,0 +1,82 @@
+---
+- name: Create IAM role for Bedrock Knowledge Base
+  amazon.aws.iam_role:
+    name: bedrock-create-kb-role
+    assume_role_policy_document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::{{ aws_account_id | default('REPLACE_ACCOUNT_ID') }}:oidc-provider/{{ oidc_provider_name }}"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "{{ oidc_provider_name }}:sub": "system:serviceaccount:{{ irsa_namespace_kb | default('default') }}:{{ irsa_serviceaccount_kb | default('project-creator') }}"
+              }
+            }
+          }
+        ]
+      }
+    state: present
+    managed_policies: []
+    create_instance_profile: no
+
+- name: Attach inline policy bedrock-create-kb-policy to role
+  amazon.aws.iam_policy:
+    state: present
+    iam_type: role
+    iam_name: bedrock-create-kb-role
+    policy_name: bedrock-create-kb-policy
+    policy_json: "{{ lookup('file', 'roles/iam_roles/files/bedrock-create-kb-policy.json') }}"
+
+- name: Create IAM role for Bedrock User
+  amazon.aws.iam_role:
+    name: bedrock-user-role
+    assume_role_policy_document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::{{ aws_account_id | default('REPLACE_ACCOUNT_ID') }}:oidc-provider/{{ oidc_provider_name }}"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringLike": {
+                "{{ oidc_provider_name }}:sub": "system:serviceaccount:{{ irsa_namespace_user | default('user*') }}:{{ irsa_serviceaccount_user | default('my-workbench') }}"
+              }
+            }
+          }
+        ]
+      }
+    state: present
+    managed_policies: []
+    create_instance_profile: no
+
+- name: Attach inline policy user-policy to role
+  amazon.aws.iam_policy:
+    state: present
+    iam_type: role
+    iam_name: bedrock-user-role
+    policy_name: user-policy
+    policy_json: "{{ lookup('file', 'roles/iam_roles/files/user-policy.json') }}"
+
+- name: Create IAM role for Bedrock Vectorstore
+  amazon.aws.iam_role:
+    name: bedrock-vectorstore-role
+    assume_role_policy_document: '{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "bedrock.amazonaws.com"}, "Action": "sts:AssumeRole"}]}'
+    state: present
+    managed_policies: []
+    create_instance_profile: no
+
+- name: Attach inline policy bedrock-vectorstore-policy to role
+  amazon.aws.iam_policy:
+    state: present
+    iam_type: role
+    iam_name: bedrock-vectorstore-role
+    policy_name: bedrock-vectorstore-policy
+    policy_json: "{{ lookup('file', 'roles/iam_roles/files/bedrock-vectorstore-policy.json') }}"

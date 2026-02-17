@@ -1,0 +1,10 @@
+---
+# Default parameters for fetch_oidc role. Override via inventory, role vars, or -e.
+# Examples:
+#  -e rosa_api_server=https://api.cluster.example.com -e rosa_token=XXXX
+
+rosa_api_server: null
+rosa_token: null
+rosa_ca_cert: null
+rosa_kubeconfig_content: null
+rosa_kubeconfig_path: null

@@ -1,0 +1,41 @@
+---
+# Create a Kubernetes ServiceAccount and annotate it for IRSA (eks.amazonaws.com/role-arn)
+
+- name: Ensure namespace exists
+  ansible.builtin.command:
+    cmd: oc get namespace --kubeconfig={{ kubeconfig_path }} {{ sa_namespace }}
+  register: ns_check
+  failed_when: false
+  changed_when: false
+
+- name: Create namespace if missing
+  ansible.builtin.command:
+    cmd: oc create namespace --kubeconfig={{ kubeconfig_path }} {{ sa_namespace }}
+  when: ns_check.rc != 0
+  register: ns_create
+  failed_when: ns_create.rc != 0
+
+- name: Render ServiceAccount manifest
+  ansible.builtin.copy:
+    dest: "{{ playbook_dir }}/.{{ sa_name }}.yaml"
+    content: |
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: {{ sa_name }}
+        namespace: {{ sa_namespace }}
+        annotations:
+          eks.amazonaws.com/role-arn: "arn:aws:iam::{{ aws_account_id }}:role/{{ iam_role_name }}"
+
+- name: Apply ServiceAccount manifest
+  ansible.builtin.command:
+    cmd: >-
+      oc apply --kubeconfig={{ kubeconfig_path }} -f {{ playbook_dir }}/.{{ sa_name }}.yaml
+  register: sa_apply
+  failed_when: sa_apply.rc != 0
+
+- name: Remove generated manifest
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/.{{ sa_name }}.yaml"
+    state: absent
+  when: sa_apply is defined
