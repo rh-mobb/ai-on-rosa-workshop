@@ -1,7 +1,7 @@
 = Comparing two LLMs
 include::_attributes.adoc[]
 
-So far, for this {ic-lab}, we have used the model https://azure.microsoft.com/en-us/blog/introducing-gpt4-in-azure-openai-service/[Azure OpenAI GPT-4,window=_blank]. It's easy to use and available to us as an API, but what if we try a smaller model running on only CPUs? Would that work? Let's try!
+So far, for this {ic-lab}, we have used the model Amazon Nova Pro v1. It's easy to use and available to us as an API, but what if we try a smaller model running on only CPUs? Would that work? Let's try!
 
 In this exercise, we'll pitch our previous model against a much smaller LLM called https://huggingface.co/google/flan-t5-small[flan-t5-large,window=_blank]. We'll compare the results and see if the smaller model is good enough for our use case.
 

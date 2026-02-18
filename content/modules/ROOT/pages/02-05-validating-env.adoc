@@ -10,7 +10,7 @@ When you open your workbench you will see your "Launcher" tab:
 [.bordershadow]
 image::02/terminal.png[]
 +
-.. Run the following command to download a `.env` file that will be used by the Jupiter Notebooks to configure access to the Azure AI services
+.. Run the following command to download a `.env` file that will be used by the Jupiter Notebooks to configure access to the Amazon Bedrock and Bedrock Knowledge Base services
 +
 
 [.lines_space]
@@ -26,12 +26,12 @@ cat .env
 [.lines_space]
 [.console-input]
 [source, bash, subs="attributes+"]
-AZURE_OPENAI_ENDPOINT=https://my-ai-service.cognitiveservices.azure.com/
+BEDROCK_ENDPOINT=https://bedrock.YOUR-REGION.amazonaws.com/
 OPENAI_API_VERSION=2024-12-01-preview
-AZURE_DEPLOYMENT=gpt-4
-AZURE_EMBEDDING=text-embeddings
-AZURE_AI_SEARCH_SERVICE_NAME="my-ai-search"
-AZURE_AI_SEARCH_INDEX_NAME="my-ai-index"
+BEDROCK_MODEL=amazon-nova-pro-v1
+BEDROCK_EMBEDDING=text-embeddings
+BEDROCK_KB_NAME="my-bedrock-kb"
+BEDROCK_KB_INDEX_NAME="my-bedrock-kb-index"
 
 
 . When configuring Managed Identity, you need to create an Azure Managed Identity for the workload to use, Attach approprite roles and scopes to give it access to Azure resources, and then create a Federated Identity which creates the trust relationship between the Identity and the OpenShift ServiceAccount that will be running your `pods`.
@@ -99,7 +99,7 @@ The output should look as follows:
 
 [source,console]
 ----
-Found Azure OpenAI Base Endpoint: https://eastus.api.cognitive.microsoft.com/
+Found Bedrock endpoint: https://bedrock.YOUR-REGION.amazonaws.com/
 Success: LLM Service-FlanT5 is reachable on llm-flant5.ic-shared-llm.svc.cluster.local:3000
 ----
 
