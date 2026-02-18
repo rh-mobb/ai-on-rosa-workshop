@@ -1,5 +1,5 @@
 site:
-  title: "OpenShift AI on ARO w/ Managed Identities"
+  title: "OpenShift AI on AWS"
   url: https://redhat-scholars.github.io/course-template
   start_page: modules::index.adoc
 
