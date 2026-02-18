@@ -9,7 +9,7 @@ The information, code, models and techniques it contains are illustrations of wh
 
 == AWS and AWS AI Services
 
-In this {ic-lab} we are using an ROSA (Red Hat OpenShift Service on AWS) cluster, a managed AWS service, with https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai/[Red Hat OpenShift AI,window=_blank] installed. We are going to use Amazon Bedrock (Amazon Nova Pro v1), a large language model provider that we will use to summarize and extract information from fictive insurance claims. We are then also going to use Bedrock Knowledge Base, a vector store that can be used to store documents for retrieval when implementing RAG (Retrieval Augmented Generation). For our test application we are going to use https://aws.amazon.com/rds/postgresql/[Amazon RDS for PostgreSQL,window=_blank] to store our fictive insurance claims data.
+In this {ic-lab} we are using an ROSA (Red Hat OpenShift Service on AWS) cluster, a managed AWS service, with https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai/[Red Hat OpenShift AI,window=_blank] installed. We are going to use Amazon Bedrock (Amazon Nova Pro v1), a large language model provider that we will use to summarize and extract information from fictive insurance claims. We are then also going to use Bedrock Knowledge Base, a vector store that can be used to store documents for retrieval when implementing RAG (Retrieval Augmented Generation).
 
 == Disclaimer
 
