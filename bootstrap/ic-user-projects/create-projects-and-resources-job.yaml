@@ -22,7 +22,7 @@ spec:
             - |
               NS="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
               CM_NAME="bedrock-roles-config"
-              REQUIRED_KEYS="BEDROCK_USER_ROLE_ARN"
+              REQUIRED_KEYS="BEDROCK_USER_ROLE_ARN BEDROCK_KB_ID"
 
               echo "Waiting for ConfigMap ${CM_NAME} in namespace ${NS} ..."
               until oc -n "${NS}" get configmap "${CM_NAME}" >/dev/null 2>&1; do
