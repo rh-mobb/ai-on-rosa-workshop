@@ -251,6 +251,19 @@ spec:
             --query "ingestionJob.ingestionJobId" --output text)
 
           echo "Started ingestion job: $INGEST_JOB_ID"
+
+          # 14. add Knowledge Base ID and Collection Endpoint to a ConfigMap for use by the app
+          NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+          TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          CONFIGMAP_NAME="bedrock-roles-config"
+
+          curl --cacert $CACERT \
+              --header "Authorization: Bearer $TOKEN" \
+              --header "Content-Type: application/strategic-merge-patch+json" \
+              --request PATCH \
+              --data "{\"data\":{\"BEDROCK_KB_ID\":\"$KB_ID\"}}" \
+              "https://kubernetes.default.svc/api/v1/namespaces/$NAMESPACE/configmaps/$CONFIGMAP_NAME"
       volumes:
       - name: workdir
         emptyDir: {}
