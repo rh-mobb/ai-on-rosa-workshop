@@ -206,6 +206,7 @@ spec:
                 --index-name "$VECTOR_INDEX_NAME" \
                 > /dev/null 2>&1; then
               echo "Index exists — proceeding"
+              sleep 5 # extra wait to ensure index is fully ready before Bedrock tries to use it
               break
             else
               echo "Index not found yet — retrying in 5s"
