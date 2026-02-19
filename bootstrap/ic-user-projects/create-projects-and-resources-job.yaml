@@ -43,6 +43,11 @@ spec:
         image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
         imagePullPolicy: IfNotPresent
         env:
+        - name: AWS_BEDROCK_KNOWLEDGE_BASE_ID
+          valueFrom:
+            configMapKeyRef:
+              name: bedrock-roles-config
+              key: BEDROCK_KB_ID
         - name: WORKBENCH_IAM_ROLE_ARN
           valueFrom:
             configMapKeyRef:
@@ -443,6 +448,8 @@ spec:
                       successThreshold: 1
                       timeoutSeconds: 1
                     env:
+                      - name: AWS_BEDROCK_KNOWLEDGE_BASE_ID
+                        value: $AWS_BEDROCK_KNOWLEDGE_BASE_ID
                       - name: NOTEBOOK_ARGS
                         value: |-
                           --ServerApp.port=8888
