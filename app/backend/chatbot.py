@@ -13,7 +13,7 @@ from queue import Empty, Queue
 from threading import Thread
 
 import pymongo
-from langchain_aws import BedrockLLM, AmazonKnowledgeBasesRetriever
+from langchain_aws import ChatBedrock, AmazonKnowledgeBasesRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_community.vectorstores.azure_cosmos_db import (
     AzureCosmosDBVectorSearch,
@@ -187,7 +187,7 @@ class Chatbot:
             aws_region = os.getenv("AWS_REGION")
 
             # Initialize Bedrock LLM via langchain_aws
-            llm = BedrockLLM(
+            llm = ChatBedrock(
                 model_id=bedrock_model_id,
                 region_name=aws_region,
                 streaming=True,
