@@ -59,16 +59,9 @@ spec:
         volumeMounts:
         - name: sql-script-volume
           mountPath: /sql-script
-        - name: dot-env
-          mountPath: /opt/app-root/src/.env
-          subPath: .env
-          readOnly: true
       restartPolicy: Never
       volumes:
       - name: sql-script-volume
         configMap:
           name: sql-script-configmap
-      - name: dot-env
-        secret:
-          secretName: dot-env
   backoffLimit: 4
