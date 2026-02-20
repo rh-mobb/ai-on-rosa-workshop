@@ -49,6 +49,7 @@ joblib==1.4.2
 jsonpatch==1.33
 jsonpointer==3.0.0
 langchain==0.3.24
+langchain_aws==0.2.9
 langchain-community @ https://github.com/paulczar/langchain/releases/download/azure-ai-search/langchain_community-0.3.21-py3-none-any.whl#sha256=824e20e2c556265dc418651ecc511354da75fb9255187a330299b1cd24004fa7
 langchain-core==0.3.55
 langchain-openai==0.3.14

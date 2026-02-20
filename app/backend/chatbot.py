@@ -13,6 +13,7 @@ from queue import Empty, Queue
 from threading import Thread
 
 import pymongo
+from langchain_aws import BedrockLLM, AmazonKnowledgeBasesRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_community.vectorstores.azure_cosmos_db import (
     AzureCosmosDBVectorSearch,
@@ -177,6 +178,33 @@ class Chatbot:
 
             retriever = AzureAISearchRetriever(
                 content_key="chunk", top_k=5, index_name=azure_ai_search_index_name
+            )
+        elif ai_service == "aws":
+
+            # Use LangChain AWS integrations for Bedrock LLM and Bedrock Knowledge Bases
+            bedrock_model_id = os.getenv("BEDROCK_MODEL_ID")
+            bedrock_kb_id = os.getenv("BEDROCK_KB_ID")
+            aws_region = os.getenv("AWS_REGION")
+
+            # Initialize Bedrock LLM via langchain_aws
+            llm = BedrockLLM(
+                model_id=bedrock_model_id,
+                region_name=aws_region,
+                streaming=True,
+                callbacks=[QueueCallback(q, self.logger)],
+                model_kwargs={
+                    "max_new_tokens": int(self.config.get("MAX_TOKENS", 512)),
+                    "top_p": float(self.config.get("TOP_P", 1.0)),
+                    "temperature": float(self.config.get("TEMPERATURE", 0.0)),
+                    "presence_penalty": float(self.config.get("PRESENCE_PENALTY", 0.0)),
+                },
+            )
+
+            # Initialize Bedrock Knowledge Bases retriever via langchain_aws
+            retriever = AmazonKnowledgeBasesRetriever(
+                knowledge_base_id=bedrock_kb_id,
+                region_name=aws_region,
+                top_k=int(self.config.get("MAX_RETRIEVED_DOCS", 5)),
             )
 
 

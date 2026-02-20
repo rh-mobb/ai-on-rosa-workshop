@@ -52,7 +52,7 @@ spec:
             - name: PRESENCE_PENALTY
               value: '1.03'
             - name: AI_SERVICE
-              value: azure
+              value: aws
             - name: STORAGE_SERVICE
               value: aws
             - name: POSTGRES_HOST
@@ -78,12 +78,12 @@ spec:
               value: http://minio.ic-shared-minio.svc.cluster.local:9000
             - name: IMAGES_BUCKET
               value: $(NAMESPACE)
-            - name: AWS_ACCESS_KEY_ID
+            - name: S3_AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: secret-minio
                   key: aws_access_key_id
-            - name: AWS_SECRET_ACCESS_KEY
+            - name: S3_AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: secret-minio
