@@ -639,6 +639,18 @@ spec:
                   termination: edge
           EOF
 
+          # bedrock config
+          cat <<EOF | oc apply -f -
+          ---
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: bedrock-kb-config
+            namespace: $USER_PROJECT
+          data:
+            kb_id: $AWS_BEDROCK_KNOWLEDGE_BASE_ID
+          EOF
+
           sleep 20
 
           done
