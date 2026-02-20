@@ -24,8 +24,11 @@ The output should look as follows:
 
 [source,console]
 ----
-Found Bedrock endpoint: https://bedrock.YOUR-REGION.amazonaws.com/
+Found AWS Role ARN: arn:aws:iam::< AWS ACCOUNT ID >:role/bedrock-user-role
+Found Bedrock Knowledge Base ID: < KNOWLEDGE BASE ID >
+Success: Gitea is reachable on gitea.gitea.svc.cluster.local:3000
 Success: LLM Service-FlanT5 is reachable on llm-flant5.ic-shared-llm.svc.cluster.local:3000
+Success: ModelMesh is reachable on modelmesh-serving.ic-shared-img-det.svc.cluster.local:8033
 ----
 
 If the output of this notebook looks suspicious, please inform the people leading the {ic}.
