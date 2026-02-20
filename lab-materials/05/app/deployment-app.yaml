@@ -19,17 +19,8 @@ spec:
         azure.workload.identity/use: "true"
     spec:
       serviceAccountName: my-workbench
-      volumes:
-        - name: dot-env
-          secret:
-            secretName: dot-env
       containers:
         - name: insurance-claim-app
-          volumeMounts:
-            - mountPath: /opt/app-root/src/.env
-              subPath: .env
-              name: dot-env
-              readOnly: true
           image: ghcr.io/rh-mobb/rhoai-lab-insurance-claim-app:miwi
           ports:
             - containerPort: 5000
