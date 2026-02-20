@@ -204,7 +204,12 @@ class Chatbot:
             retriever = AmazonKnowledgeBasesRetriever(
                 knowledge_base_id=bedrock_kb_id,
                 region_name=aws_region,
-                top_k=int(self.config.get("MAX_RETRIEVED_DOCS", 5)),
+                retrieval_config={
+                    "vectorSearchConfiguration": {
+                        "numberOfResults": int(self.config.get("MAX_RETRIEVED_DOCS", 5)),
+                        "overrideSearchType": "HYBRID"
+                    }
+                }
             )
 
 
