@@ -35,6 +35,8 @@ asciidoc:
     company-name: "Parasol Insurance"
     ic-lab: "lab"
     ic: "{company-name} {ic-lab}"
+    rhoai_dashboard: "{rhoai_dashboard}"
+    ocp_console_url: "{openshift_console_url}"
 
   extensions:
     - ./content/lib/tab-block.js

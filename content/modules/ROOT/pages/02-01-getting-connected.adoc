@@ -14,6 +14,9 @@ If you are using the customized version of the instructions, the information bel
 
 In a new window or tab, open the following URL and log in:
 
+* The OpenShift Console URL for our shared environment:
+** {ocp_console_url}[{ocp_console_url},window=_blank]
+
 * The {rhoai} Dashboard URL for our shared environment:
 ** {rhoai_dashboard}/projects[{rhoai_dashboard}/projects,window=_blank]
 * Click on the `Login with OpenShift` button:
