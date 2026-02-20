@@ -203,10 +203,10 @@ class Chatbot:
             # Initialize Bedrock Knowledge Bases retriever via langchain_aws
             retriever = AmazonKnowledgeBasesRetriever(
                 knowledge_base_id=bedrock_kb_id,
+                region_name=os.getenv("AWS_REGION"),
                 retrieval_config={
                     "vectorSearchConfiguration": {
-                        "numberOfResults": int(self.config.get("MAX_RETRIEVED_DOCS", 5)),
-                        "overrideSearchType": "HYBRID"
+                        "numberOfResults": 5
                     }
                 }
             )
