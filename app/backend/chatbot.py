@@ -246,6 +246,7 @@ class Chatbot:
             if os.getenv("AI_SERVICE") == "aws": # AWS Bedrock Knowledge Bases does not return source documents in the same way as the other vector DB based retrievers
                 data = {"type": "token", "token": resp['result']}
                 q.put(data)
+                sources = ""
             else:
                 sources = self.format_sources(resp['source_documents'])
 
