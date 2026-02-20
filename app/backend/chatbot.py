@@ -11,6 +11,7 @@ from langchain_community.vectorstores import Milvus
 from milvus_retriever_with_score_threshold import MilvusRetrieverWithScoreThreshold
 from queue import Empty, Queue
 from threading import Thread
+import boto3
 
 import pymongo
 from langchain_aws import ChatBedrock, AmazonKnowledgeBasesRetriever
@@ -186,6 +187,12 @@ class Chatbot:
             bedrock_kb_id = os.getenv("BEDROCK_KB_ID")
             aws_region = os.getenv("AWS_REGION")
 
+            if not aws_region:
+                # K8s sometimes uses AWS_DEFAULT_REGION instead
+                aws_region = os.getenv("AWS_DEFAULT_REGION", "us-east-2") 
+
+            bedrock_client = boto3.client("bedrock-agent-runtime", region_name=aws_region)
+
             # Initialize Bedrock LLM via langchain_aws
             llm = ChatBedrock(
                 model_id=bedrock_model_id,
@@ -203,7 +210,7 @@ class Chatbot:
             # Initialize Bedrock Knowledge Bases retriever via langchain_aws
             retriever = AmazonKnowledgeBasesRetriever(
                 knowledge_base_id=bedrock_kb_id,
-                region_name=os.getenv("AWS_REGION"),
+                client=bedrock_client,
                 retrieval_config={
                     "vectorSearchConfiguration": {
                         "numberOfResults": 5
