@@ -14,7 +14,7 @@ from threading import Thread
 import boto3
 
 import pymongo
-from langchain_aws import ChatBedrockConverse, AmazonKnowledgeBasesRetriever
+from langchain_aws import ChatBedrock, AmazonKnowledgeBasesRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_community.vectorstores.azure_cosmos_db import (
     AzureCosmosDBVectorSearch,
@@ -194,7 +194,7 @@ class Chatbot:
             bedrock_client = boto3.client("bedrock-agent-runtime", region_name=aws_region)
 
             # Initialize Bedrock LLM via langchain_aws
-            llm = ChatBedrockConverse(
+            llm = ChatBedrock(
                 model_id=bedrock_model_id,
                 region_name=aws_region,
                 streaming=True,
@@ -242,7 +242,8 @@ class Chatbot:
             self.logger.info(f"Response: {resp}")
             self.logger.info(f"Sources: {resp['source_documents']}")
             if os.getenv("AI_SERVICE") == "aws": # AWS Bedrock Knowledge Bases does not return source documents in the same way as the other vector DB based retrievers
-                sources = []
+                data = {"type": "token", "token": resp.content}
+                self.q.put(data)
             else:
                 sources = self.format_sources(resp['source_documents'])
 
