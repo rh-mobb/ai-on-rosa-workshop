@@ -205,8 +205,8 @@ spec:
                 --id "$COLLECTION_ID" \
                 --index-name "$VECTOR_INDEX_NAME" \
                 > /dev/null 2>&1; then
-              echo "Index exists — proceeding"
-              sleep 5 # extra wait to ensure index is fully ready before Bedrock tries to use it
+              echo "Index exists in control plane — waiting for data-plane propagation..."
+              sleep 30
               break
             else
               echo "Index not found yet — retrying in 5s"
@@ -215,17 +215,28 @@ spec:
           done
 
           # 11. create knowledge base with OpenSearch Serverless storage
-          KB_ID=$(aws bedrock-agent create-knowledge-base \
-            --name "$KB_NAME" \
-            --description "California Drivers Handbook KB (parasol workshop)" \
-            --role-arn "$ROLE_ARN" \
-            --knowledge-base-configuration "{\"type\":\"VECTOR\",\"vectorKnowledgeBaseConfiguration\":{\"embeddingModelArn\":\"arn:aws:bedrock:${AWS_REGION}::foundation-model/amazon.titan-embed-text-v2:0\",\"embeddingModelConfiguration\":{\"bedrockEmbeddingModelConfiguration\":{\"dimensions\":1024,\"embeddingDataType\":\"FLOAT32\"}}}}" \
-            --storage-configuration "{\"type\":\"OPENSEARCH_SERVERLESS\",\"opensearchServerlessConfiguration\":{\"collectionArn\":\"${COLLECTION_ARN}\",\"vectorIndexName\":\"${VECTOR_INDEX_NAME}\",\"fieldMapping\":{\"vectorField\":\"embedding\",\"textField\":\"text\",\"metadataField\":\"metadata\"}}}" \
-            --region "$AWS_REGION" \
-            --query "knowledgeBase.knowledgeBaseId" --output text)
+          #     Retry loop: the index may be visible in the control plane but
+          #     not yet queryable on the data plane when Bedrock validates it.
+          KB_ID=""
+          MAX_KB_RETRIES=6
+          for i in $(seq 1 $MAX_KB_RETRIES); do
+            echo "Attempting to create Knowledge Base (attempt ${i}/${MAX_KB_RETRIES})..."
+            KB_ID=$(aws bedrock-agent create-knowledge-base \
+              --name "$KB_NAME" \
+              --description "California Drivers Handbook KB (parasol workshop)" \
+              --role-arn "$ROLE_ARN" \
+              --knowledge-base-configuration "{\"type\":\"VECTOR\",\"vectorKnowledgeBaseConfiguration\":{\"embeddingModelArn\":\"arn:aws:bedrock:${AWS_REGION}::foundation-model/amazon.titan-embed-text-v2:0\",\"embeddingModelConfiguration\":{\"bedrockEmbeddingModelConfiguration\":{\"dimensions\":1024,\"embeddingDataType\":\"FLOAT32\"}}}}" \
+              --storage-configuration "{\"type\":\"OPENSEARCH_SERVERLESS\",\"opensearchServerlessConfiguration\":{\"collectionArn\":\"${COLLECTION_ARN}\",\"vectorIndexName\":\"${VECTOR_INDEX_NAME}\",\"fieldMapping\":{\"vectorField\":\"embedding\",\"textField\":\"text\",\"metadataField\":\"metadata\"}}}" \
+              --region "$AWS_REGION" \
+              --query "knowledgeBase.knowledgeBaseId" --output text 2>/tmp/kb-error.log) && break
+            echo "create-knowledge-base failed (index likely not ready on data plane). Retrying in 15s..."
+            cat /tmp/kb-error.log
+            sleep 15
+          done
 
           if [ -z "$KB_ID" ]; then
-            echo "ERROR: Failed to create Knowledge Base" >&2
+            echo "ERROR: Failed to create Knowledge Base after ${MAX_KB_RETRIES} attempts" >&2
+            cat /tmp/kb-error.log >&2
             exit 1
           fi
           echo "Created KB_ID: $KB_ID"
