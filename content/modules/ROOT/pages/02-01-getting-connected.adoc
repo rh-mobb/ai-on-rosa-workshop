@@ -17,9 +17,7 @@ In a new window or tab, open the following URL and log in:
 * The OpenShift Console URL for our shared environment:
 ** {ocp_console_url}[{ocp_console_url},window=_blank]
 
-* The {rhoai} Dashboard URL for our shared environment:
-** {rhoai_dashboard}/projects[{rhoai_dashboard}/projects,window=_blank]
-* Click on the `Login with OpenShift` button:
+* Click on the `Cognito` button:
 +
 [.bordershadow]
 image::02/02-01-login3.png[width=50%]
@@ -36,6 +34,16 @@ image::02/02-01-login-scary.png[]
 * It is safe here to ignore this message when it pops up.
 
 * After you authenticate, the result should look like:
++
+[.bordershadow]
+image::02/02-01-ocp-projects-page.png[]
+
+* Click on the application switchen in the top right corner (9 dots) and click on Red Hat OpenShift AI:
++
+[.bordershadow]
+image::02/02-01-app-switch.png[]
+
+* The result should look like:
 +
 [.bordershadow]
 image::02/02-01-rhoai-projects-page.png[]

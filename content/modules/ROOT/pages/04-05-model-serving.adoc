@@ -40,7 +40,7 @@ Shared Minio - model
 [.console-input]
 [source, text]
 [subs=attributes+]
-none
+us
 ** Bucket:
 [.lines_space]
 [.console-input]

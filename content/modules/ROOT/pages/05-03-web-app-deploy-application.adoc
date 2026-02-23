@@ -1,14 +1,6 @@
 = Deploying the application via GitOps
 include::_attributes.adoc[]
 
-- Create a secret containing the .env file
-+
-[.lines_space]
-[.console-input]
-[source, bash, subs="attributes+"]
-curl -O {azure_ai_info_url}
-oc create secret generic dot-env --from-file .env
-
 - Let's find the Route of the {argocd} instance by running the following command in the Terminal:
 +
 [.lines_space]

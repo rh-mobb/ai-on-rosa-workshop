@@ -18,12 +18,7 @@ image::02/02-03-open-link.png[]
 ** Authenticate with the same credentials as earlier:
 *** Your account id: `{user}`
 *** Your password: `{password}`
-* You will be asked to accept the following settings:
-+
-[.bordershadow]
-image::02/02-02-accept.png[]
 
-* Click on *Allow selected permissions*
 * You should now see this:
 +
 [.bordershadow]
