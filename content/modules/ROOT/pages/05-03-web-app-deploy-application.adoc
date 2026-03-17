@@ -37,7 +37,7 @@ spec:
   project: default
   source:
     path: lab-materials/05/app
-    repoURL: https://github.com/phbergsmann/ai-on-rosa-workshop.git
+    repoURL: https://github.com/rh-mobb/ai-on-rosa-workshop.git
     targetRevision: main
   syncPolicy:
     automated:

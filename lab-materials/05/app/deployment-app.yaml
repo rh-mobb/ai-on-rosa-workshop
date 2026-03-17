@@ -21,7 +21,7 @@ spec:
       serviceAccountName: my-workbench
       containers:
         - name: insurance-claim-app
-          image: ghcr.io/phbergsmann/ai-on-rosa-workshop/app:latest
+          image: ghcr.io/rh-mobb/ai-on-rosa-workshop/app:latest
           ports:
             - containerPort: 5000
               protocol: TCP

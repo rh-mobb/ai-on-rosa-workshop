@@ -109,7 +109,7 @@ spec:
           WORKBENCH_NAME="my-workbench"
           WORKBENCH_IMAGE="ic-workbench:latest"
           PIPELINE_ENGINE="Tekton"
-          WORKBENCH_LAB_GIT_REPOSITORY="https://github.com/phbergsmann/ai-on-rosa-workshop"
+          WORKBENCH_LAB_GIT_REPOSITORY="https://github.com/rh-mobb/ai-on-rosa-workshop"
           # WORKBENCH_IAM_ROLE_ARN is provided via ConfigMap key BEDROCK_USER_ROLE_ARN
 
           for i in $(seq 1 $user_count);

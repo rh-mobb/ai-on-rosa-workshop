@@ -30,7 +30,7 @@ spec:
         openshift.io/imported-from: quay.io/rh-aiservices-bu/rhoai-lab-insurance-claim-workbench
       from:
         kind: DockerImage
-        name: ghcr.io/phbergsmann/ai-on-rosa-workshop/workbench:latest
+        name: ghcr.io/rh-mobb/ai-on-rosa-workshop/workbench:latest
       importPolicy:
         importMode: Legacy
       referencePolicy:
