@@ -8,8 +8,9 @@ include::_attributes.adoc[]
 
 == Create a Data Connection
 
-* First go back to your https://rhods-dashboard-redhat-ods-applications.{openshift_cluster_ingress_domain}/projects/{user}[Red Hat OpenShift AI dashboard,window=_blank]
-* In your Data Science project, create a Data Connection that refers to the shared MinIO.
+* First go back to your Red Hat OpenShift AI dashboard
+* In your Data Science project, create a new connection
+* Select "S3 compatible object storage - v1"
 * Here is the info you need to enter:
 ** Name:
 [.lines_space]

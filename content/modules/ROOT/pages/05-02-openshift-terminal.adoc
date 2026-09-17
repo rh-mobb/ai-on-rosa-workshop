@@ -6,7 +6,7 @@ This is a web-based terminal that allows you to execute commands on the {ocp-sho
 
 == Opening the {ocp} Console
 
-- Access the {ocp-short} Console via this link: {openshift_console_url}
+- Access the {ocp-short} Console via this link: {ocp_console_url}[{ocp_console_url},window=_blank]
 - Or, from within Red Hat OpenShift AI by clicking in the top right and selecting **OpenShift Console**
 +
 [.bordershadow]
