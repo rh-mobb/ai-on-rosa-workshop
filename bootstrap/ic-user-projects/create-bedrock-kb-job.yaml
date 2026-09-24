@@ -15,7 +15,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: wait-for-serviceaccount
-        image: registry.redhat.io/openshift4/ose-cli:latest
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
         command: ["/bin/sh", "-ec"]
         args:
           - |
@@ -46,7 +46,7 @@ spec:
       restartPolicy: Never
       initContainers:
         - name: wait-for-config
-          image: registry.redhat.io/openshift4/ose-cli:latest
+          image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
           command: ["/bin/sh", "-ec"]
           args:
             - |
